@@ -1,0 +1,30 @@
+// SPDX-License-Identifier: CC0-1.0
+
+__proto__ := 0; true := 1; p := 2; q := 3; PAYLOAD := 67;
+
+// Initialization
+prototype <- alloc_C;
+obj1 <- alloc; obj1[__proto__] := prototype;
+obj2 <- alloc; obj2[__proto__] := prototype;
+
+// `Object.prototype.p = true'
+prototype[p] := true;
+
+// `Object.prototype.q = PAYLOAD'
+prototype[q] := PAYLOAD;
+
+// `var x = obj1[i1]'
+x := nil; t := obj1;
+while (x == nil) && (t != nil) { x := t[I_1]; t := t[__proto__] }
+
+// `if (x) { ... }'
+if x == true {
+	// `var y = obj2[i2]'
+	y := nil; t := obj2;
+	while (y == nil) && (t != nil) { y := t[I_2]; t := t[__proto__] }
+
+	// `eval(y)'
+	Sink := y
+} else {
+	skip
+}

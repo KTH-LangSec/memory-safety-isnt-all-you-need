@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: CC0-1.0
+
+__globals__ := 0; __class__ := 1; __init__ := 2;
+	classA := 3; classB := 4; p := 5;
+
+// Initialization
+global <- alloc_C;
+A <- alloc; global[classA] := A; init <- alloc;
+A[__init__] := init; init[__globals__] := global;
+B <- alloc; global[classB] := B; init <- alloc;
+B[__init__] := init; init[__globals__] := global;
+B[p] := 42;
+o <- alloc; o[__class__] := A;
+
+// `setattr(getattr(...)[i4], i5, i6)'
+t := o[I_1]; t := t[I_2]; t := t[I_3]; t := t[I_4]; t[I_5] := I_6;
+
+// `x = B.p'
+x := B[p];
+
+// `eval(x)'
+Sink := x

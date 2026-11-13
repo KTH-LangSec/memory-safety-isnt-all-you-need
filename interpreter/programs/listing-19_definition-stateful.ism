@@ -1,0 +1,5 @@
+// SPDX-License-Identifier: CC0-1.0
+
+shared1 <- alloc_C; shared1[I_1] := I_2;
+shared2 <- alloc_C; shared2[0] := 42; shared2[1] := 67;
+Sink := shared2[I_3]

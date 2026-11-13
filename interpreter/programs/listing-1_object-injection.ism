@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: CC0-1.0
+
+type := 0; exec := 1; fn f { skip } fn g { Sink := 67 }
+
+// Initialization
+Cmd <- alloc_C; Bkp <- alloc_C; OSCmd <- alloc_C;
+Bkp[type] := Cmd; Bkp[exec] := f;
+OSCmd[type] := Cmd; OSCmd[exec] := g;
+
+// `Cmd c = (Cmd) deserialize(i1);'
+c <- alloc;
+if I_1 == 0 { c[type] := Bkp }
+else { if I_1 == 1 { c[type] := OSCmd } else { skip } }
+
+// `Runnable x = c::exec;'
+x := nil; t := c; p := exec;
+while (x == nil) && (t != nil) { x := t[p]; t := t[type] }
+
+// `x.run();'
+call x
+
+
+
+// `class Bkp implements Cmd { ... }'      -- line 6+7
+// `class OSCmd implements Cmd { ... }'    -- line 6+8

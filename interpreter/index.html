@@ -1,0 +1,276 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<html lang="en-US">
+	<html>
+		<meta charset="utf-8" />
+		<title>IMP_sm (imperative shared memory) interpreter</title>
+	<head>
+	</head>
+	<body>
+		<p id="parse-error" style="color: red;"></p>
+		<textarea id="program" style="display: block; width: 460px; height: 320px;">
+type := 0; exec := 1; fn f { skip } fn g { Sink := 67 }
+Cmd <- alloc_C; Bkp <- alloc_C; OSCmd <- alloc_C;
+Bkp[type] := Cmd; Bkp[exec] := f;
+OSCmd[type] := Cmd; OSCmd[exec] := g;
+c <- alloc;
+if I_1 == 0 { c[type] := Bkp }
+else { if I_1 == 1 { c[type] := OSCmd } else { skip } }
+v := nil; t := c; p := exec;
+while (v == nil) && (t != nil) { v := t[p]; t := t[type] }
+call v
+		</textarea>
+		<button id="parse">parse</button>
+
+		<hr>
+
+		<div id="inputs"></div>
+		<button id="start" disabled="true">start</button>
+
+		<hr>
+
+		<p id="run-error" style="color: red;"></p>
+		<button id="step" disabled="true">step</button>
+		<button id="run" disabled="true">run</button>
+
+		<p id="output"></p>
+		<div id="configuration">
+  		<p id="command"></p>
+		  <div id="state"></div>
+		</div>
+
+		<script type="module">
+		import init, { parse, start, step } from "./pkg/ism.js";
+		await init();
+
+		const $parseError = document.getElementById("parse-error");
+		const $runError = document.getElementById("run-error");
+		const $program = document.getElementById("program");
+		const $inputs = document.getElementById("inputs");
+		const $parse = document.getElementById("parse");
+		const $start = document.getElementById("start");
+		const $step = document.getElementById("step");
+		const $run = document.getElementById("run");
+		const $output = document.getElementById("output");
+		const $command = document.getElementById("command");
+		const $state = document.getElementById("state");
+
+		function debounce(fn, delay) {
+			let timeoutId;
+			return (...args) => {
+				clearTimeout(timeoutId);
+				timeoutId = setTimeout(() => fn(...args), delay);
+			};
+		}
+
+		function input() {
+			$start.disabled = true;
+
+			const source = $program.value;
+
+			const expr = /(?:^|\s)(I_\d+)(?:\s|$)/g;
+			const inputs = new Set();
+			let match;
+			while ((match = expr.exec(source)) !== null) {
+				inputs.add(match[1]);
+			}
+
+			for (const input of inputs) {
+				if ($inputs.querySelector(`[data-input='${input}']`) !== null) {
+					continue;
+				}
+
+				const $label = document.createElement("label");
+				$label.for = input;
+				$label.textContent = input;
+
+				const $input = document.createElement("input");
+				$input.id = input;
+				$input.placeholder = "0";
+
+				const $container = document.createElement("div");
+				$container.setAttribute("data-input", input);
+				$container.append($label, $input)
+
+				$inputs.append($container);
+			}
+
+			for (const $container of $inputs.children) {
+				const input = $container.dataset.input;
+				if (!inputs.has(input)) {
+					$inputs.removeChild($container);
+				}
+			}
+		}
+
+		let program;
+		function parseProgram() {
+			$parse.disabled = true;
+			$parseError.textContent = "";
+
+			try {
+				const source = $program.value;
+				console.debug("[PARSE]", source.split(/\n/).at(0), "...");
+				program = parse(source);
+				$start.disabled = false;
+			} catch (error) {
+				$parseError.textContent = error;
+			} finally {
+				$parse.disabled = false;
+			}
+		}
+
+		let configuration
+		function startProgram() {
+			$start.disabled = true;
+
+			const inputs = new Map();
+			for (const $input of $inputs.children) {
+				const key = $input.dataset.input;
+				const value = Number.parseInt($input.querySelector("input").value, 10) || 0;
+				inputs.set(key, value);
+			}
+
+			console.debug("[START]", program, inputs);
+			configuration = start(program, inputs);
+			renderConfiguration(configuration);
+
+			$step.disabled = false;
+			$run.disabled = false;
+		}
+		function stepProgram() {
+			$runError.textContent = "";
+			$output.textContent = "";
+
+			$step.disabled = true;
+			$run.disabled = true;
+
+			console.log("[STEP]", configuration);
+
+			try {
+				configuration = step(configuration);
+				renderConfiguration(configuration);
+				if (configuration.is_done()) {
+					$output.textContent = configuration.get_output();
+				} else {
+					$step.disabled = false;
+					$run.disabled = false;
+				}
+			} catch (error) {
+				$runError.textContent = error;
+			}
+		}
+		function runProgram() {
+			$runError.textContent = "";
+			$output.textContent = "";
+
+			$step.disabled = true;
+			$run.disabled = true;
+
+			console.log("[RUN]", configuration);
+
+			try {
+				while (!configuration.is_done()) {
+					configuration = step(configuration);
+				}
+
+				renderConfiguration(configuration);
+				$output.textContent = configuration.get_output();
+			} catch (error) {
+				$runError.textContent = error;
+			}
+		}
+
+		function renderConfiguration(configuration) {
+		  const command = configuration.get_command();
+			$command.innerText = command || "";
+
+			const state = configuration.get_state();
+			$state.innerHTML = "";
+			{
+			  const $container = document.createElement("div");
+				const $title = document.createTextNode("Store");
+				const $table = document.createElement("table");
+
+				const store = state.get_store();
+				for (const [key, value] of Object.entries(store)) {
+					const row = $table.insertRow();
+					const keyCell = row.insertCell();
+					keyCell.innerText = key;
+					const valueCell = row.insertCell();
+					valueCell.innerText = value;
+				}
+
+				$container.append($title, $table);
+				$state.append($container);
+			}
+
+			{
+			  const $container = document.createElement("div");
+				const $title = document.createTextNode("Function");
+				const $table = document.createElement("table");
+
+				const functions = state.get_functions();
+				for (const [key, value] of Object.entries(functions)) {
+					const row = $table.insertRow();
+					const keyCell = row.insertCell();
+					keyCell.innerText = key;
+					const valueCell = row.insertCell();
+					valueCell.innerText = value;
+				}
+
+				$container.append($title, $table);
+				$state.append($container);
+			}
+
+			{
+			  const $container = document.createElement("div");
+				const $title = document.createTextNode("Context");
+				const $table = document.createElement("table");
+
+				const context = state.get_context();
+				for (const [key, value] of Object.entries(context)) {
+					const row = $table.insertRow();
+					const keyCell = row.insertCell();
+					keyCell.innerText = key;
+					const valueCell = row.insertCell();
+					valueCell.innerText = value;
+				}
+
+				$container.append($title, $table);
+				$state.append($container);
+			}
+		}
+
+		$program.addEventListener("keyup", debounce(input, 250));
+		$parse.addEventListener("click", parseProgram);
+		$start.addEventListener("click", startProgram);
+		$step.addEventListener("click", stepProgram);
+		$run.addEventListener("click", runProgram);
+
+		input();
+		</script>
+		<style>
+		table, th, td {
+			border: 1px solid black;
+		}
+
+		#output:not(:empty)::before {
+			content: "Done, result: ";
+			color: #555;
+		}
+
+		#state {
+			align-content: flex-start;
+			align-items: flex-start;
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: flex-start;
+		}
+		#state > div {
+		  margin: 0 16px;
+		}
+		</style>
+	</body>
+</html>

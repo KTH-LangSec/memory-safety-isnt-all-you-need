@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: CC0-1.0
+
+true := 1; false := 0; dangerous := 67;
+fn fn_1 {
+	y := false
+}
+fn fn_2 {
+	y := true
+}
+
+shared <- alloc_C;
+shared[1] := fn_1;
+shared[2] := fn_2;
+
+
+fn f {
+	// Call flow->Sink
+	Sink := dangerous
+}
+
+// Data->Fetch->Data flow
+x := shared[I_1];
+
+// Data flow->Call flow->Data flow
+call x;
+
+// Data flow->Control flow
+if y == true {
+	// Control flow->Call flow
+	call f
+} else {
+	skip
+}

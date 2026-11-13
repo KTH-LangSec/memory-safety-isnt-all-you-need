@@ -1,0 +1,23 @@
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+
+<!doctype html>
+<html>
+<head>
+</head>
+<body>
+<script>
+var PAYLOAD = "./exploit.js"
+
+// ---
+
+var i1 = "name", i2 = "currentScript", i3 = "src", i4 = PAYLOAD
+var el = document.createElement("img")
+el.setAttribute(i1, i2); el.setAttribute(i3, i4)
+document.body.appendChild(el)
+var x = document.currentScript
+var script = document.createElement("script")
+script.src = x.src
+document.head.appendChild(script)
+</script>
+</body>
+</html>

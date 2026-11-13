@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: CC0-1.0
+
+__proto__ := 0; toString := 1; p := 2;
+fn to_string { r := 1 }
+
+// Initialization
+prototype <- alloc_C;
+prototype[toString] := to_string;
+obj1 <- alloc; obj1[__proto__] := prototype;
+obj2 <- alloc; obj2[__proto__] := prototype;
+obj3 <- alloc; obj3[__proto__] := prototype;
+
+// `var y = obj1[i1]'
+y := nil; t := obj1;
+while (y == nil) && (t != nil) { y := t[I_1]; t := t[__proto__] }
+
+// `obj2[i2][i3] = y'
+t := obj2[I_2]; t[I_3] := y;
+
+// `var x = obj3.p'
+x := nil; t := obj3;
+while (x == nil) && (t != nil) { x := t[p]; t := t[__proto__] }
+
+// `if (x && x()) sink()'
+if x != nil {
+	r := 0;
+	call x;
+	if r { Sink := 67 } else { skip }
+} else {
+	skip
+}

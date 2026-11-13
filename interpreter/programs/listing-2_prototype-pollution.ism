@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: CC0-1.0
+
+__proto__ := 0; p := 1;
+
+// Initialization
+prototype <- alloc_C;
+obj1 <- alloc; obj1[__proto__] := prototype;
+obj2 <- alloc; obj2[__proto__] := prototype;
+
+// `obj1[i1][i2] = i3'
+t := obj1[I_1]; t[I_2] := I_3;
+
+// `var x = obj2.p || "..."'
+x := nil; t := obj2;
+while (x == nil) && (t != nil) { x := t[p]; t := t[__proto__] }
+if x == nil { x := 42 } else { skip }
+
+// `eval(x)'
+Sink := x

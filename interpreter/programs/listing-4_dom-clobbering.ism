@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: CC0-1.0
+
+len := 0; DOM := 1; currentScript := 2; name := 3;
+	src := 4;
+
+// Initialization
+body <- alloc; body[len] := 0;
+cur <- alloc; cur[src] := 42;
+document <- alloc_C; document[DOM] := body;
+document[currentScript] := cur;
+el <- alloc; el[I_1] := I_2; el[I_3] := I_4;
+
+// `document.body.appendChild(el)'
+l := body[len]; body[l + 1] := el; body[len] := l + 1;
+
+// `var x = document.currentScript'
+x := nil; p := currentScript; i := 0; l := body[len];
+while (x == nil) && (i != l) {
+	i := i + 1; c := body[i]; n := c[name];
+	if n == p { x := c } else { skip } }
+if x == nil { x := document[p] } else { skip }
+
+// `script.src = x.src'
+Sink := x[src]
+
+
+
+// `var el = document.createElement("img")'            -- line 11
+// `el.setAttribute(i1, i2); el.setAttribute(i3, i4)'  -- line 11
+// `var script = document.createElement("script")'     -- *not modeled*
+// `document.head.appendChild(script)'                 -- *not modeled*

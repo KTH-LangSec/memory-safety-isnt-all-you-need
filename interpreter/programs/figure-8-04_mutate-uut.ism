@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: CC0-1.0
+
+p := 1;
+
+shared <- alloc_C;
+
+
+// Data->Store
+shared[I_1] := I_2;
+
+// Store->Fetch->Data flow
+x := shared[p];
+
+// Data flow->Sink
+Sink := x

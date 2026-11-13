@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: CC0-1.0
+
+f := 1; g := 2; benign := 42; dangerous := 67;
+fn fn_f {
+	Sink := benign
+}
+fn fn_g {
+	// Call flow->Sink
+	Sink := dangerous
+}
+
+shared <- alloc_C;
+shared[f] := fn_f;
+shared[g] := fn_g;
+
+
+// Data->Fetch->Data flow
+x := shared[I_1];
+
+// Data flow->Call flow
+call x

@@ -1,0 +1,8 @@
+// SPDX-License-Identifier: CC0-1.0
+
+p1 := 0; p2 := 1;
+
+object <- alloc;
+object[p1] := 4;
+object[p2] := 2;
+Sink := object[p1];

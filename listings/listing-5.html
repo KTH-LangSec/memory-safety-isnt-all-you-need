@@ -1,0 +1,19 @@
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+
+<!doctype html>
+<html>
+<body>
+<script>
+var PAYLOAD = "<img src=missing onerror='alert(\"code reuse attack\")' />"
+
+// ---
+
+var i1 = "id", i2 = "button", i3 = "data-text", i4 = PAYLOAD
+var el = document.createElement("div")
+el.setAttribute(i1, i2); el.setAttribute(i3, i4)
+document.body.appendChild(el)
+var x = document.getElementById("button")
+if (x) x.innerHTML = x.getAttribute("data-text")
+</script>
+</body>
+</html>

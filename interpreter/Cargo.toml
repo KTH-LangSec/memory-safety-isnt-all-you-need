@@ -1,0 +1,21 @@
+[package]
+name = "ism"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "ism"
+path = "src/main.rs"
+
+[features]
+default = ["cli"]
+cli = []
+wasm = ["dep:wasm-bindgen", "dep:js-sys"]
+
+[dependencies]
+anyhow = "1.0.103"
+js-sys = { version = "0.3.104", optional = true }
+wasm-bindgen = { version = "0.2.127", optional = true }
